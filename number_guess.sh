@@ -32,3 +32,41 @@ else
   echo "Welcome back, $USERNAME! You have played $GAMES_PLAYED games, and your best game took $BEST_GAME guesses."
 fi
 
+# Secret random number (1–1000)
+SECRET_NUMBER=$(( RANDOM % 1000 + 1 ))
+
+# Prompt the user to start guessing
+echo "Guess the secret number between 1 and 1000:"
+NUMBER_OF_GUESSES=0
+
+while true
+do
+  read GUESS
+
+  # Validate int input
+  if [[ ! $GUESS =~ ^[0-9]+$ ]]
+  then
+    echo "That is not an integer, guess again:"
+    continue
+  fi
+
+  # Increase counter
+  NUMBER_OF_GUESSES=$(( NUMBER_OF_GUESSES + 1 ))
+
+  # Compare guess
+  if (( GUESS == SECRET_NUMBER ))
+  then
+    # Save game into DB
+    SAVE_GAME=$($PSQL "INSERT INTO games(user_id, guesses) VALUES($USER_ID, $NUMBER_OF_GUESSES)")
+
+    # Victory message
+    echo "You guessed it in $NUMBER_OF_GUESSES tries. The secret number was $SECRET_NUMBER. Nice job!"
+    break
+
+  elif (( GUESS > SECRET_NUMBER ))
+  then
+    echo "It's lower than that, guess again:"
+  else
+    echo "It's higher than that, guess again:"
+  fi
+done
